@@ -1,29 +1,22 @@
-# Jev resume screener (Claude Code plugin)
+# jbp-plugins
 
-Screens a folder of resumes against a job description with TypeSafe's Jev:
-fit ranking, copied-resume clusters, JD-mirror flags, and a human review queue.
-The output is a sorted reading list for a recruiter, never a rejection.
+A Claude Code plugin marketplace. Each folder in `plugins/` is one installable plugin.
 
 ## Install
 
 ```
 /plugin marketplace add <this repo or folder>
-/plugin install jev-resume-screener@jev-screener
+/plugin install <plugin-name>@jbp-plugins
 ```
 
-Then:
+## Plugins
 
-- `/jev-setup` connects your TypeSafe key. You type the key into a hidden prompt;
-  it is saved to `~/.typesafe/api_key` and never passes through the chat.
-- `/screen-resumes` asks for the job description, hiring-manager notes, and the
-  resume folder, then drafts a rubric with you and runs the screen.
+| Plugin | What it does |
+| --- | --- |
+| [`jev-resume-screener`](plugins/jev-resume-screener/README.md) | Screens and ranks resumes against a job description with TypeSafe Jev: fit ranking, copied-resume clusters, JD-mirror flags, and a human review queue. |
 
-Needs Python 3.10+. The first run builds a private environment in
-`~/.jev-screener/venv` with `pypdf` and `python-docx`.
+## Adding a plugin
 
-## Known limits (from a 100-resume labeled benchmark)
-
-- Copied resumes: 15/15 caught. Heavy JD mirroring: 9/9.
-- Light JD paraphrasing: not caught.
-- Authenticity problems (degree dated after first job, overlapping roles,
-  inflated claims): no dedicated check yet.
+1. Create `plugins/<name>/` with `.claude-plugin/plugin.json` and its `skills/`, `commands/`, or `agents/`.
+2. Add an entry to `.claude-plugin/marketplace.json`.
+3. Run `claude plugin validate .` and commit.

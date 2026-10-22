@@ -1,5 +1,5 @@
 {
-  "name": "jev-screener",
+  "name": "jbp-plugins",
   "owner": {
     "name": "Brent Phillips"
   },
@@ -11,6 +11,6 @@
     }
   ],
   "metadata": {
-    "description": "Resume screening with TypeSafe Jev for Claude Code."
+    "description": "Claude Code plugins shared by Brent Phillips."
   }
 }
