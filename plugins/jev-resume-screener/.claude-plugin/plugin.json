@@ -1,0 +1,7 @@
+{
+  "name": "jev-resume-screener",
+  "version": "0.1.0",
+  "description": "Screen and rank resumes against a job description with TypeSafe Jev: fit scoring, copied-resume clusters, JD-mirror flags, and a human review queue.",
+  "author": {"name": "Brent Phillips"},
+  "keywords": ["recruiting", "resumes", "screening", "jev", "typesafe"]
+}

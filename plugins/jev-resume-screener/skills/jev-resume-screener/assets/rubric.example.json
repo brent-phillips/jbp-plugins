@@ -1,0 +1,58 @@
+{
+  "role": "Senior Product Marketing Manager, B2B SaaS",
+  "must_haves": [
+    {
+      "id": "pmm_years",
+      "question": "Does the resume show at least 5 years working in product marketing (positioning, messaging, launches, or sales enablement)?",
+      "true": "Five or more years in roles whose work is clearly product marketing, even if titled differently.",
+      "false": "Under five years of product marketing, or marketing work that is mainly demand generation, events, or brand."
+    },
+    {
+      "id": "b2b_software",
+      "question": "Has the candidate done marketing work for a B2B software or SaaS product?",
+      "true": "At least one role marketing software sold to businesses.",
+      "false": "Only consumer, agency, or non-software marketing."
+    }
+  ],
+  "scored": [
+    {
+      "id": "launches",
+      "weight": 3,
+      "question": "How much hands-on experience leading product launches does the resume show?",
+      "levels": [
+        "None mentioned",
+        "Supported launches led by others",
+        "Led one or two launches end to end",
+        "Led many launches end to end, with results"
+      ]
+    },
+    {
+      "id": "positioning",
+      "weight": 3,
+      "question": "How strong is the evidence of positioning and messaging work the candidate personally created?",
+      "levels": [
+        "None",
+        "Contributed to messaging",
+        "Owned messaging for a product",
+        "Owned positioning across a portfolio or company"
+      ]
+    },
+    {
+      "id": "enablement",
+      "weight": 2,
+      "question": "How much sales enablement work does the resume show (training, battlecards, pitch decks)?",
+      "levels": ["None", "Some", "Regular part of the role", "Built or ran an enablement program"]
+    },
+    {
+      "id": "analytics",
+      "weight": 1,
+      "question": "How much evidence is there of using data to guide marketing decisions (win/loss, market research, pipeline analysis)?",
+      "levels": ["None", "Mentions data", "Specific analyses with outcomes"]
+    }
+  ],
+  "settings": {
+    "review_band": [0.35, 0.65],
+    "min_confidence": 0.5,
+    "tiers": {"strong": 60, "possible": 30}
+  }
+}

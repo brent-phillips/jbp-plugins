@@ -1,0 +1,16 @@
+{
+  "name": "jev-screener",
+  "owner": {
+    "name": "Brent Phillips"
+  },
+  "plugins": [
+    {
+      "name": "jev-resume-screener",
+      "source": "./plugins/jev-resume-screener",
+      "description": "Screen and rank resumes against a job description with TypeSafe Jev."
+    }
+  ],
+  "metadata": {
+    "description": "Resume screening with TypeSafe Jev for Claude Code."
+  }
+}
