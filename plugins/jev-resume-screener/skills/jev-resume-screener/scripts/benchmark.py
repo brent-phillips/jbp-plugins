@@ -28,6 +28,11 @@ out["mirror_false_flags"] = sorted(people[i]["file"] for i in mf - mir)
 # authenticity: anything flagged or sent to review
 auth = {i for i, p in people.items() if lab(p).startswith("authenticity")}
 out["authenticity_flagged_or_review"] = f"{sum(1 for i in auth if people[i]['flags'] or people[i]['review'])}/{len(auth)}"
+af = {i for i, p in people.items() if "authenticity" in p["flags"]}
+out["authenticity_flagged"] = f"{len(auth & af)}/{len(auth)}"
+out["authenticity_by_label"] = {f"{people[i]['file'][7:10]} {lab(people[i])[len('authenticity_flag_'):]}": i in af
+                                for i in sorted(auth)}
+out["authenticity_false_flags"] = sorted(f"{people[i]['file']} ({lab(people[i])})" for i in af - auth)
 
 # fit on genuine + authenticity resumes (not copies/mirrors)
 tier = {"strong": "Strong", "moderate": "Possible", "weak": "Unlikely"}

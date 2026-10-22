@@ -43,6 +43,9 @@ def test_call() -> tuple[bool, str]:
 
 
 def save() -> None:
+    if not sys.stdin.isatty():
+        sys.exit("The key prompt needs a real terminal. Open a normal Terminal window and run:\n"
+                 f"  {Path(__file__).parent / 'run.sh'} jev_setup.py --save")
     key = getpass.getpass("Paste your TypeSafe API key (input hidden): ").strip()
     if not key:
         sys.exit("No key entered; nothing saved.")

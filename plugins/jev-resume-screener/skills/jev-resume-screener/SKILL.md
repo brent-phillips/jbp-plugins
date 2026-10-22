@@ -23,8 +23,9 @@ S="<this skill's directory>/scripts"
 
 ### 0. Check the Jev connection
 Run `"$S/run.sh" jev_setup.py --check`. On `JEV_STATUS=ok`, continue.
-On `missing_key`, tell the user to run this in their own terminal (or type it
-after `!` in Claude Code) so the key never passes through the chat:
+On `missing_key`, tell the user to run this in a normal Terminal window (not
+through Claude, which has no keyboard for the hidden prompt) so the key never
+passes through the chat:
 
 ```bash
 "<scripts dir>/run.sh" jev_setup.py --save
@@ -98,7 +99,7 @@ Refer to candidates by ID, not name. Save as `run/rationales.json`
 ### 6. Hand back
 Give the user `run/report.html` and `run/results.csv`. Summarize in a few
 lines: how many are Strong / Possible, how many need a human look and why,
-copy clusters found, mirror flags. Remind them the fit index ranks; it is not a
+copy clusters found, mirror flags, authenticity notes. Remind them the fit index ranks; it is not a
 calibrated probability of a good hire.
 
 ## How to read the flags
@@ -112,6 +113,15 @@ calibrated probability of a good hire.
   as copied. Low evidence score strengthens the signal. Many honest candidates
   tailor resumes to postings; the flag means "verify in the interview," not
   "reject." Light paraphrasing of the JD is not reliably caught.
+- **Authenticity**: the resume's own timeline or claims don't hold together.
+  Code checks overlapping full-time roles, a degree dated years after the first
+  job, title jumps that skip most of the ladder, very short senior tenures,
+  "N years of <tool>" beyond the tool's age, and very long certification lists.
+  Jev judges whether claimed results are plausible for the roles. Heavy stock
+  phrasing ("best-in-class", "cutting-edge") is reported as a weak signal. Each
+  note says what to verify; there are innocent explanations for all of them
+  (concurrent part-time roles, degrees finished while working, startup titles).
+  Employment gaps are never checked.
 - **Needs review**: a must-have probability between 0.35 and 0.65, a
   low-confidence score, a flag, or a short extraction (often a scanned PDF).
 
@@ -126,4 +136,5 @@ calibrated probability of a good hire.
 | `scripts/calibrate.py` | Compare recruiter labels to the ranking |
 | `scripts/benchmark.py` | Score a run against a labeled answer key (testing the screener itself) |
 | `scripts/jev_client.py` | Jev API client: caching, retries, parallel calls, mock mode |
+| `scripts/authenticity.py` | Timeline and claim checks (local, exact) |
 | `scripts/common.py` | Extraction, redaction, text similarity |

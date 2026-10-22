@@ -29,6 +29,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from common import (SUPPORTED, extract_text, jaccard, load_json, normalize_words,  # noqa: E402
                     redact, save_json, sha, shingles)
 from jev_client import JevClient  # noqa: E402
+import authenticity  # noqa: E402
 
 DEFAULTS = {
     "review_band": [0.35, 0.65],    # must-have probabilities in here go to a human
@@ -43,6 +44,14 @@ DEFAULTS = {
     "mirror_jev_threshold": 0.6,    # Jev probability the wording is copied
     "min_words": 60,                # shorter extractions are flagged (scans, images)
     "tiers": {"strong": 60, "possible": 30},
+    "auth_overlap_months": 6,       # two full-time roles overlapping at least this long
+    "auth_degree_lag_years": 2,     # earliest degree this many years after the first role
+    "auth_title_jump_levels": 6,    # seniority rungs skipped between consecutive roles
+    "auth_short_senior_months": 6,  # manager-or-above role that ended this quickly
+    "auth_tool_slack_years": 0,     # "N years of <tool>" beyond the tool's age plus this
+    "auth_cert_count": 6,           # certifications listed
+    "auth_generic_per_1k": 40,      # stock-phrase hits per 1,000 words (weak signal)
+    "auth_metrics_jev_threshold": 0.6,  # Jev probability that claimed results are implausible
 }
 
 STOP = set("""a an and are as at be by for from has have in is it of on or our the to
@@ -90,6 +99,23 @@ INTEGRITY_QUESTIONS = {
                     "keywords unconnected to any role.",
             "false": "All text describes the candidate's own experience, skills, education, or "
                      "contact details, including normal mentions of AI as a skill or product.",
+        },
+    },
+}
+
+# Narrow authenticity questions. Timeline facts (overlaps, degree dates, title jumps,
+# tool ages) are checked exactly in authenticity.py; Jev only judges plausibility.
+AUTH_QUESTIONS = {
+    "implausible_metrics": {
+        "type": "noul",
+        "instructions": "Does `resume` claim results that are implausible for the roles it "
+                        "describes, given ordinary industry experience?",
+        "criteria": {
+            "true": "Claims such as 100% uptime, cutting costs by 90% or more, single-handedly "
+                    "producing tens of millions in revenue from an internal team, or numbers far "
+                    "beyond what the stated team size, tenure, or company could produce.",
+            "false": "Claimed results are specific and within the range a capable person in "
+                     "these roles could plausibly achieve, even if impressive.",
         },
     },
 }
@@ -228,6 +254,7 @@ def build_questions(rubric: dict) -> dict:
                                 "criteria": sc["levels"]}
     qs.update(MIRROR_QUESTIONS)
     qs.update(INTEGRITY_QUESTIONS)
+    qs.update(AUTH_QUESTIONS)
     return qs
 
 
@@ -268,6 +295,19 @@ def evaluate(people, jd_text, rubric, jev, cfg):
         hits = sorted({m.group(0).lower() for m in INJECTION_PATTERNS.finditer(p["text"])})
         p_inj = round(ans["hidden_instructions"]["noul"], 3)
         p["integrity"] = {"jev_hidden_instructions": p_inj, "pattern_hits": hits}
+        auth = authenticity.check(p["text"], cfg)
+        auth["jev_implausible_metrics"] = round(ans["implausible_metrics"]["noul"], 3)
+        notes = [f"{f['check']}: {f['detail']}" for f in auth["findings"]]
+        if auth["jev_implausible_metrics"] >= cfg["auth_metrics_jev_threshold"]:
+            notes.append(f"implausible results claimed (Jev p={auth['jev_implausible_metrics']:.2f})")
+        if auth["generic_per_1k_words"] >= cfg["auth_generic_per_1k"]:
+            notes.append(f"heavy stock phrasing ({auth['generic_per_1k_words']} per 1k words: "
+                         f"{', '.join(auth['generic_phrases'][:4])}); weak signal")
+        auth["notes"] = notes
+        p["authenticity"] = auth
+        if notes:
+            p["flags"].append("authenticity")
+            p["review"].extend(f"verify: {n}" for n in notes)
         if hits or p_inj >= cfg["injection_jev_threshold"]:
             why = f"matched {hits[:3]}" if hits else f"Jev p={p_inj:.2f}"
             p["flags"].append("hidden instructions")
@@ -317,8 +357,8 @@ def write_outputs(out: Path, people, clusters, rubric, jev, cfg):
         w = csv.writer(f)
         w.writerow(["rank", "id", "file", "name", "fit_index", "tier", "p_all_must_haves"]
                    + [f"must:{m}" for m in mh_ids] + [f"score:{s}" for s in sc_ids]
-                   + ["jd_overlap", "jev_mirror", "evidence", "jev_hidden_instructions", "flags",
-                      "needs_review"])
+                   + ["jd_overlap", "jev_mirror", "evidence", "jev_hidden_instructions",
+                      "authenticity", "flags", "needs_review"])
         for p in people:
             w.writerow([p.get("rank", ""), p["id"], p["file"], p.get("name") or "",
                         p.get("fit_index", ""), p.get("tier", ""), p.get("p_all_must", "")]
@@ -326,7 +366,8 @@ def write_outputs(out: Path, people, clusters, rubric, jev, cfg):
                        + [p.get("scored", {}).get(s, {}).get("norm", "") for s in sc_ids]
                        + [p.get("mirror", {}).get("overlap", ""), p.get("mirror", {}).get("jev_mirror", ""),
                           p.get("mirror", {}).get("evidence", ""),
-                          p.get("integrity", {}).get("jev_hidden_instructions", ""), "; ".join(p["flags"]),
+                          p.get("integrity", {}).get("jev_hidden_instructions", ""),
+                          "; ".join(p.get("authenticity", {}).get("notes", [])), "; ".join(p["flags"]),
                           "; ".join(p["review"])])
     # redacted text stays local for Claude's rationale step
     (out / "redacted").mkdir(exist_ok=True)
