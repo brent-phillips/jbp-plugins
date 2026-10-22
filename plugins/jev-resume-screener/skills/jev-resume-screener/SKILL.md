@@ -54,12 +54,23 @@ to a third-party API under their employer's policies. Names and contact details
 are stripped before anything leaves the machine, but work history is not.
 
 ### 2. Draft the rubric with the user
-Read `references/rubric-guide.md`, then draft `<workdir>/rubric.json` from the
+First read what earlier reviews taught: `"$S/run.sh" feedback.py show --role "<role>"`.
+Then read `references/rubric-guide.md` and draft `<workdir>/rubric.json` from the
 job description and the hiring notes, using `assets/rubric.example.json` as the
 template: 2 to 4 must-haves, 3 to 6 weighted scored criteria. Hiring notes
-outrank the JD where they conflict. Show it to the user in plain language (not
-JSON) and ask what to change. Keep every question job-related; the guide lists
-what never goes in a rubric.
+outrank the JD where they conflict.
+
+Check every criterion with `"$S/run.sh" rubric_check.py --rubric <workdir>/rubric.json`.
+It says, per criterion, whether it should be a hard gate or a weighted score.
+Gates are for facts a candidate has or lacks; quantities where close still counts
+(years of experience is the usual one) become scored bands. Rewrite any
+suggested scored question as a "how many / how much" question.
+
+Show the user the rubric in plain language (not JSON), with the gate-or-score
+call for each criterion and any logged lessons that apply. Propose each change a
+lesson implies and let the user accept or reject it; never apply a lesson
+silently. Keep every question job-related; the guide lists what never goes in a
+rubric.
 
 ### 3. Calibrate on a small set (recommended, first run for a role)
 Have the recruiter label 10 to 20 resumes yes / maybe / no in `labels.csv`
@@ -100,7 +111,36 @@ Refer to candidates by ID, not name. Save as `run/rationales.json`
 Give the user `run/report.html` and `run/results.csv`. Summarize in a few
 lines: how many are Strong / Possible, how many need a human look and why,
 copy clusters found, mirror flags, authenticity notes. Remind them the fit index ranks; it is not a
-calibrated probability of a good hire.
+calibrated probability of a good hire. Offer the review step next.
+
+### 7. Learn from the reviewer
+Once the reviewer has read the report, ask for their decisions: advance, maybe,
+or reject for each candidate they looked at, with a short note where they
+disagree. Save them as `<workdir>/run/decisions.csv` (columns
+`file,decision,note`) and run:
+
+```bash
+"$S/run.sh" feedback.py compare --out <workdir>/run --decisions <workdir>/run/decisions.csv
+```
+
+Ask about each disagreement, one at a time, using the evidence the comparison
+prints: "The screener had C0012 as Unlikely because the management gate scored
+0.14; you'd advance them. What did you see that it missed?" Then ask one overall
+question: what should the screener weigh differently next time? If the output
+has `gate_advice`, run `rubric_check.py --rubric <rubric> --out <workdir>/run`
+and recommend turning that gate into a score.
+
+Write each lesson the reviewer confirms to a JSON file and log it:
+
+```bash
+"$S/run.sh" feedback.py log --out <workdir>/run --entry <entry.json>
+```
+
+An entry is `{"lesson": "...", "rubric_change": "...", "scope": "role",
+"candidates": [{"id": "C0012", "reviewer": "advance", "screener": "Unlikely",
+"why": "..."}]}`; use `"scope": "general"` for lessons that apply to every role.
+Lessons cite candidate IDs, never names. The log lives in
+`~/.jev-screener/learnings/`, outside any repository; step 2 reads it next time.
 
 ## How to read the flags
 
@@ -134,6 +174,8 @@ calibrated probability of a good hire.
 | `scripts/screen.py` | Full pipeline: ingest + redact, dedupe, Jev evaluation, rank, outputs |
 | `scripts/report.py` | Rebuild `report.html`; merge rationales |
 | `scripts/calibrate.py` | Compare recruiter labels to the ranking |
+| `scripts/feedback.py` | Learning loop: compare reviewer decisions, log lessons, show them next run |
+| `scripts/rubric_check.py` | Recommend hard gate or weighted score for each criterion |
 | `scripts/benchmark.py` | Score a run against a labeled answer key (testing the screener itself) |
 | `scripts/jev_client.py` | Jev API client: caching, retries, parallel calls, mock mode |
 | `scripts/authenticity.py` | Timeline and claim checks (local, exact) |
