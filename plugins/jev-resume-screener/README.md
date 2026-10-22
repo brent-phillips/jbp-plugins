@@ -7,7 +7,7 @@ The output is a sorted reading list for a recruiter, never a rejection.
 ## Install
 
 ```
-/plugin marketplace add <this repo or folder>
+/plugin marketplace add brent-phillips/jbp-plugins
 /plugin install jev-resume-screener@jbp-plugins
 ```
 

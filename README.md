@@ -5,7 +5,7 @@ A Claude Code plugin marketplace. Each folder in `plugins/` is one installable p
 ## Install
 
 ```
-/plugin marketplace add <this repo or folder>
+/plugin marketplace add brent-phillips/jbp-plugins
 /plugin install <plugin-name>@jbp-plugins
 ```
 
